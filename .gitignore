@@ -1,0 +1,36 @@
+# Secrets
+.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+
+# Data (raw crawl is machine-local; regenerate with pipeline)
+data/raw/
+*.jsonl.gz
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.swp
+
+# AI skill (57 MB, regenerable - teammates: npm i -g ui-ux-pro-max-cli && uipro init --ai opencode)
+.opencode/
+
+# Logs & local artifacts
+*.log
+dist/
+build/
+.cache/
