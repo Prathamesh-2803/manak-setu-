@@ -194,6 +194,7 @@ export default function Home() {
   const [mapOut, setMapOut] = useState<MapOut | null>(null);
   const [mapLoading, setMapLoading] = useState(false);
   const [copiedReport, setCopiedReport] = useState(false);
+  const [micLang, setMicLang] = useState<"hi-IN" | "en-IN">("hi-IN");
   const fileRef = useRef<HTMLInputElement | null>(null);
   const recRef = useRef<{ stop: () => void } | null>(null);
   const t0Ref = useRef(0);
@@ -229,7 +230,7 @@ export default function Home() {
     if (!Impl) { setErr("Voice input needs Chrome — please type instead."); return; }
     if (listening) { recRef.current?.stop(); setListening(false); return; }
     const rec = new Impl();
-    rec.lang = "hi-IN"; rec.interimResults = false; rec.maxAlternatives = 1;
+    rec.lang = micLang; rec.interimResults = false; rec.maxAlternatives = 1;
     rec.onresult = (e: { results: { transcript: string }[][] }) => setQ(e.results[0][0].transcript);
     rec.onend = () => setListening(false);
     rec.onerror = () => { setListening(false); setErr("Mic failed — please type instead."); };
@@ -439,7 +440,11 @@ export default function Home() {
         <div className="cbox">
           <textarea value={q} onChange={(e) => setQ(e.target.value)}
             placeholder="e.g. 12 mm steel bars for building construction, 500 tonnes, ISI-marked…" aria-label="Describe what you want to procure" />
-          <button className={`iconbtn${listening ? " live" : ""}`} onClick={toggleMic} title="Voice input (Hindi/English)" aria-label="Voice input">{I.mic}</button>
+          <button className={`iconbtn${listening ? " live" : ""}`} onClick={toggleMic} title={`Voice input (${micLang === "hi-IN" ? "Hindi" : "English"})`} aria-label="Voice input">{I.mic}</button>
+          <div className="langtoggle" role="group" aria-label="Voice input language">
+            <button className={micLang === "hi-IN" ? "on" : ""} onClick={() => setMicLang("hi-IN")} title="Speak in Hindi">हिं</button>
+            <button className={micLang === "en-IN" ? "on" : ""} onClick={() => setMicLang("en-IN")} title="Speak in English">EN</button>
+          </div>
           <button className="cta" disabled={loading} onClick={() => run(q)}>{loading ? "Khoj…" : <>Find {I.go}</>}</button>
         </div>
         <div className="chips">
@@ -449,6 +454,7 @@ export default function Home() {
             </button>
           ))}
         </div>
+        <div className="hintline">Mic speaks {micLang === "hi-IN" ? "Hindi (हिंदी में बोलें)" : "English"} — either way the AI understands. Hindi text in the box is fine.</div>
         {err && <div className="err">{err}</div>}
       </section>
       )}
