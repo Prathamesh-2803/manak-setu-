@@ -290,6 +290,13 @@ body {
 }
 .langtoggle button.on { background: rgba(255, 153, 51, 0.2); color: var(--saffron); }
 .langtoggle button:hover { color: var(--ink); }
+.langselect {
+  flex: none; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--line);
+  border-radius: 14px; color: var(--saffron); font-size: 13px; font-weight: 800;
+  padding: 0 10px; min-height: 66px; cursor: pointer; font-family: inherit;
+}
+.langselect:focus { outline: none; border-color: rgba(255, 153, 51, 0.6); }
+.langselect option { background: #0a1122; }
 .hintline { font-size: 12px; color: var(--faint); margin-top: 10px; }
 .mapper input {
   flex: 1; min-width: 180px; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--line);

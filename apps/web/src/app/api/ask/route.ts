@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     const r = await fetch(`${API_URL}/api/v1/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, limit: 6, expand: 6 }),
+      body: JSON.stringify({ query, limit: 6, expand: 6, language_hint: body.language_hint ?? null }),
       signal: ctl.signal,
     });
     const data = await r.json();

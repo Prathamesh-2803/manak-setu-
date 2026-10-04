@@ -177,7 +177,8 @@ function Chakra() {
 
 /* ---------------- main page ---------------- */
 export default function Home() {
-  const [q, setQ] = useState(SAMPLES[0]);
+  const [q, setQ] = useState("");
+  const [voiced, setVoiced] = useState<string | null>(null);
   const [out, setOut] = useState<AskOut | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -194,7 +195,7 @@ export default function Home() {
   const [mapOut, setMapOut] = useState<MapOut | null>(null);
   const [mapLoading, setMapLoading] = useState(false);
   const [copiedReport, setCopiedReport] = useState(false);
-  const [micLang, setMicLang] = useState<"hi-IN" | "en-IN">("hi-IN");
+  const [micLang, setMicLang] = useState<"hi-IN" | "mr-IN" | "en-IN">("hi-IN");
   const fileRef = useRef<HTMLInputElement | null>(null);
   const recRef = useRef<{ stop: () => void } | null>(null);
   const t0Ref = useRef(0);
@@ -212,7 +213,7 @@ export default function Home() {
     try {
       const r = await fetch("/api/ask", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, language_hint: voiced }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || `request failed (${r.status})`);
@@ -231,7 +232,7 @@ export default function Home() {
     if (listening) { recRef.current?.stop(); setListening(false); return; }
     const rec = new Impl();
     rec.lang = micLang; rec.interimResults = false; rec.maxAlternatives = 1;
-    rec.onresult = (e: { results: { transcript: string }[][] }) => setQ(e.results[0][0].transcript);
+    rec.onresult = (e: { results: { transcript: string }[][] }) => { setQ(e.results[0][0].transcript); setVoiced(micLang); };
     rec.onend = () => setListening(false);
     rec.onerror = () => { setListening(false); setErr("Mic failed — please type instead."); };
     recRef.current = rec; setListening(true);
@@ -438,13 +439,14 @@ export default function Home() {
       {mode === "find" && (
       <section className="console">
         <div className="cbox">
-          <textarea value={q} onChange={(e) => setQ(e.target.value)}
+          <textarea value={q} onChange={(e) => { setQ(e.target.value); setVoiced(null); }}
             placeholder="e.g. 12 mm steel bars for building construction, 500 tonnes, ISI-marked…" aria-label="Describe what you want to procure" />
           <button className={`iconbtn${listening ? " live" : ""}`} onClick={toggleMic} title={`Voice input (${micLang === "hi-IN" ? "Hindi" : "English"})`} aria-label="Voice input">{I.mic}</button>
-          <div className="langtoggle" role="group" aria-label="Voice input language">
-            <button className={micLang === "hi-IN" ? "on" : ""} onClick={() => setMicLang("hi-IN")} title="Speak in Hindi">हिं</button>
-            <button className={micLang === "en-IN" ? "on" : ""} onClick={() => setMicLang("en-IN")} title="Speak in English">EN</button>
-          </div>
+          <select className="langselect" value={micLang} onChange={(e) => setMicLang(e.target.value as "hi-IN" | "mr-IN" | "en-IN")} title="Voice input language" aria-label="Voice input language">
+            <option value="hi-IN">हिंदी</option>
+            <option value="mr-IN">मराठी</option>
+            <option value="en-IN">EN</option>
+          </select>
           <button className="cta" disabled={loading} onClick={() => run(q)}>{loading ? "Khoj…" : <>Find {I.go}</>}</button>
         </div>
         <div className="chips">
@@ -454,7 +456,7 @@ export default function Home() {
             </button>
           ))}
         </div>
-        <div className="hintline">Mic speaks {micLang === "hi-IN" ? "Hindi (हिंदी में बोलें)" : "English"} — either way the AI understands. Hindi text in the box is fine.</div>
+        <div className="hintline">Mic speaks {micLang === "hi-IN" ? "Hindi (हिंदी में बोलें)" : micLang === "mr-IN" ? "Marathi (मराठीत बोला)" : "English"} — typed Hinglish works too. Spoken input is auto-tagged so the AI labels it right.</div>
         {err && <div className="err">{err}</div>}
       </section>
       )}

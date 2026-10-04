@@ -22,10 +22,20 @@ _SYSTEM = (
     '{"understood": "<one-line English restatement>", "product": "<main product>", '
     '"material": "<material or empty>", "grade_size": "<grades/sizes or empty>", '
     '"quantity": "<qty or empty>", "use": "<intended use or empty>", '
-    '"language": "<en|hi|hinglish>", '
+    '"language": "<en|hi|hinglish|mr>", '
     '"sub_queries": ["<product specification query>", "<test methods query>", '
     '"<safety/code query>", "<marking/packaging/sampling query>"]}'
 )
+
+_LANG_HINTS = {"en": "en", "hi": "hi", "hinglish": "hinglish", "mr": "mr",
+              "en-in": "en", "hi-in": "hi", "mr-in": "mr"}
+
+
+def _clean_hint(hint: str | None) -> str | None:
+    if not hint:
+        return None
+    return _LANG_HINTS.get(hint.strip().lower())
+
 
 _HINGLISH_CUES = {
     "chahiye", "wala", "wale", "wali", "ke", "liye", "ka", "ki", "aur", "hai",
@@ -52,14 +62,14 @@ def detect_language(q: str) -> str:
     return "en"
 
 
-def _heuristic(q: str) -> dict:
-    lang = detect_language(q)
+def _heuristic(q: str, language_hint: str | None = None) -> dict:
+    lang = _clean_hint(language_hint) or detect_language(q)
     ql = q.lower()
     hints: list[str] = []
     matched: list[str] = []
     for c in _load_glossary():
         terms = [*(c.get("terms_en", [])), *(c.get("terms_hi", [])),
-                 *(c.get("terms_hinglish", []))]
+                 *(c.get("terms_hinglish", [])), *(c.get("terms_mr", []))]
         if any(re.search(rf"\b{re.escape(t.lower())}\b", ql) for t in terms if t):
             matched.append(c.get("display", c["id"]))
             hints.extend(c.get("is_hints", []))
@@ -83,16 +93,17 @@ def _heuristic(q: str) -> dict:
     }
 
 
-def decompose(query: str) -> dict:
+def decompose(query: str, language_hint: str | None = None) -> dict:
+    hint = _clean_hint(language_hint)
     data = generate_json(_SYSTEM, f"Buyer request: {query}")
     if data and isinstance(data.get("sub_queries"), list) and data["sub_queries"]:
         data["sub_queries"] = [str(s) for s in data["sub_queries"]][:4]
         while len(data["sub_queries"]) < 4:
             data["sub_queries"].append(query)
-        data.setdefault("language", detect_language(query))
+        data["language"] = hint or data.get("language") or detect_language(query)
         data.setdefault("understood", query)
         data["decomposer"] = "llm"
         data["is_hints"] = _heuristic(query).get("is_hints", [])
         return data
     log.warning("LLM decompose failed, using heuristic fallback")
-    return _heuristic(query)
+    return _heuristic(query, language_hint=hint)

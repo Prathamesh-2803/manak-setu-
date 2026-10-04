@@ -32,6 +32,7 @@ class AskRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=4000)
     limit: int = Field(default=6, ge=1, le=10)
     expand: int = Field(default=6, ge=0, le=12)
+    language_hint: str | None = Field(default=None, max_length=16)
 
 
 class CertInfo(BaseModel):
@@ -109,7 +110,7 @@ def _run(req: AskRequest) -> dict:
         stages_ms[name] = int((time.perf_counter() - t) * 1000)
 
     t = time.perf_counter()
-    dec = decompose.decompose(req.query)
+    dec = decompose.decompose(req.query, language_hint=req.language_hint)
     mark("decompose", t)
 
     t = time.perf_counter()
@@ -131,10 +132,12 @@ def _run(req: AskRequest) -> dict:
         warnings.append("Retrieval hiccup on sub-queries; results may be incomplete.")
     mark("retrieve", t)
 
-    # Glossary hints: force-include known product standards the retriever may miss.
+    # Glossary hints: force-include known product standards the retriever may miss,
+    # and guarantee they enter the rerank window even if retrieved deep in the pool.
     t = time.perf_counter()
     hint_rows: dict[str, dict] = {}
-    for hint in dec.get("is_hints", [])[:5]:
+    want = [h for h in (dec.get("is_hints", []) or [])[:5]]
+    for hint in want:
         if hint not in seen:
             seen.add(hint)
             fetched = db.fetch_by_designations([hint])
@@ -142,6 +145,10 @@ def _run(req: AskRequest) -> dict:
                 hint_rows.update(fetched)
                 pool.insert(0, {"designation": hint, "score": None,
                                 "rerank_score": None, "_hint": True})
+    want_set = set(want)
+    if want_set:
+        pool = [c for c in pool if (c.get("designation") or "") in want_set] + \
+               [c for c in pool if (c.get("designation") or "") not in want_set]
     mark("hints", t)
 
     t = time.perf_counter()
@@ -256,7 +263,7 @@ def _run(req: AskRequest) -> dict:
 
 @router.post("/ask", response_model=AskResponse)
 def ask(req: AskRequest) -> AskResponse:
-    key = f"{req.query.strip().lower()}|{req.limit}|{req.expand}"
+    key = f"{req.query.strip().lower()}|{req.limit}|{req.expand}|{req.language_hint or ''}"
     if key in _cache:
         out = dict(_cache[key])
         out["cached"] = True

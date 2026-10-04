@@ -5,7 +5,7 @@
 # is_hints seed the search but retrieval decides the final set — never force these.
 
 version: 1
-locales: [en, hi, hinglish]
+locales: [en, hi, hinglish, mr]
 updated: 2026-10-04
 
 concepts:
@@ -14,6 +14,7 @@ concepts:
     terms_en: [rebar, reinforcement bar, deformed bar, high strength deformed bar, tmt bar]
     terms_hi: [saria, saria salai, sariya]
     terms_hinglish: [tmt saria, fe500, fe500d, fe550, steel saria, tmt bar]
+    terms_mr: [सळई, सळया, टीएमटी, स्टील, बांधकाम सळई]
     is_hints: ["IS 1786", "IS 15622", "IS 2502", "IS 11496", "IS 13920"]
     signals: [yield strength, tensile test, bend test, mass per metre, grade fe]
 
@@ -22,6 +23,7 @@ concepts:
     terms_en: [cement, ordinary portland cement, portland pozzolana cement, opc, ppc]
     terms_hi: [sement, portland cement]
     terms_hinglish: [33 grade cement, 43 grade, 53 grade, ready mix]
+    terms_mr: [सिमेंट]
     is_hints: ["IS 8112", "IS 1489", "IS 12269", "IS 269", "IS 455"]
     signals: [setting time, fineness, compressive strength, grade]
 
@@ -151,6 +153,7 @@ concepts:
     terms_hi: [plywood, sarakki]
     terms_hinglish: [marine ply, commercial ply, waterproof ply, mdf]
     is_hints: ["IS 303", "IS 710", "IS 12406", "IS 1659", "IS 2185", "IS 10701"]
+    terms_mr: [प्लायवूड, मरीन प्लाय]
     signals: [grade, formaldehyde emission, moisture, bonding]
 
   - id: welding
