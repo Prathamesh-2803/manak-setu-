@@ -1,0 +1,209 @@
+# Manak Setu — Domain Glossary v1
+# Maps colloquial / Hinglish / trade terms to a concept + probable Indian Standards.
+# Consumed by the query pre-processor (Week 3): expand user text → concept → IS hints,
+# then re-rank by vector retrieval. Terms are matched case-insensitively, word-boundary.
+# is_hints seed the search but retrieval decides the final set — never force these.
+
+version: 1
+locales: [en, hi, hinglish]
+updated: 2026-10-04
+
+concepts:
+  - id: tmt_rebar
+    display: TMT bars / steel reinforcement
+    terms_en: [rebar, reinforcement bar, deformed bar, high strength deformed bar, tmt bar]
+    terms_hi: [saria, saria salai, sariya]
+    terms_hinglish: [tmt saria, fe500, fe500d, fe550, steel saria, tmt bar]
+    is_hints: ["IS 1786", "IS 15622", "IS 2502", "IS 11496", "IS 13920"]
+    signals: [yield strength, tensile test, bend test, mass per metre, grade fe]
+
+  - id: cement
+    display: Cement (OPC/PPC)
+    terms_en: [cement, ordinary portland cement, portland pozzolana cement, opc, ppc]
+    terms_hi: [sement, portland cement]
+    terms_hinglish: [33 grade cement, 43 grade, 53 grade, ready mix]
+    is_hints: ["IS 8112", "IS 1489", "IS 12269", "IS 269", "IS 455"]
+    signals: [setting time, fineness, compressive strength, grade]
+
+  - id: concrete
+    display: Concrete / RMC
+    terms_en: [concrete, ready mix concrete, rmc, design mix, m20, m25, m30]
+    terms_hi: [concrete, rcc, ferro concrete]
+    terms_hinglish: [rcc work, slab concrete, pcc, damp proof]
+    is_hints: ["IS 456", "IS 383", "IS 10262", "IS 1199", "IS 516"]
+    signals: [slump, cube test, water cement ratio, aggregate]
+
+  - id: ceiling_fan
+    display: Ceiling / exhaust fan
+    terms_en: [ceiling fan, exhaust fan, air circulator, table fan, pedestal fan]
+    terms_hi: [far, chhat pankha, exhaust far]
+    terms_hinglish: [pankha, fan motor, speed regulator]
+    is_hints: ["IS 374", "IS 4894", "IS 2312", "IS 555"]
+    signals: [air delivery, speed, power input, safety]
+
+  - id: led_lighting
+    display: LED lamps / luminaires
+    terms_en: [led lamp, led bulb, luminaire, light fitting, panel light, street light]
+    terms_hi: [led bulb, led lamp, jyot]
+    terms_hinglish: [led light, cfl replacement, 9 watt bulb, batten]
+    is_hints: ["IS 10322", "IS 16107", "IS 15885", "IS 60598"]
+    signals: [luminous efficacy, color temperature, flicker, safety class]
+
+  - id: electrical_cable
+    display: Wires & cables
+    terms_en: [wire, cable, power cable, submersible cable, flexible cord, conductors]
+    terms_hi: [taar, tar, cable, vidyut]
+    terms_hinglish: [copper wire, house wiring, frls wire, armoured cable]
+    is_hints: ["IS 694", "IS 1554", "IS 7098", "IS 8130", "IS 3961"]
+    signals: [insulation, current rating, voltage grade, copper conductor]
+
+  - id: transformer
+    display: Transformers
+    terms_en: [transformer, distribution transformer, power transformer, amorphous]
+    terms_hi: [transformer, vidyut parivartak]
+    terms_hinglish: [dt transformer, 315 kva, transformer oil]
+    is_hints: ["IS 2026", "IS 1448", "IS 335", "IS 1180"]
+    signals: [impedance, no load loss, on load tap changer, oil]
+
+  - id: solar_pv
+    display: Solar PV modules & systems
+    terms_en: [solar panel, solar module, photovoltaic, rooftop solar, inverter]
+    terms_hi: [solar panel, soorya urja]
+    terms_hinglish: [solar plant, on grid, off grid, net metering]
+    is_hints: ["IS 14286", "IS 13830", "IS 16170", "IS 17945", "IS 15163"]
+    signals: [efficiency, watt peak, iec 61215, degradation]
+
+  - id: mobile_charger
+    display: Chargers / power adapters / power banks
+    terms_en: [charger, power adapter, power bank, usb charger, fast charger]
+    terms_hi: [charger, bijli charger]
+    terms_hinglish: [mobile charger, soku adapter, type c charger]
+    is_hints: ["IS 13252", "IS 16106", "IS 15884", "IS 616"]
+    signals: [output voltage, surge, safety, efficiency level]
+
+  - id: battery
+    display: Batteries (starter / UPS / EV)
+    terms_en: [battery, starter battery, ups battery, lithium ion, lead acid]
+    terms_hi: [battri, cell, battery]
+    terms_hinglish: [inverter battery, tubular battery, ev battery, li ion pack]
+    is_hints: ["IS 16571", "IS 840", "IS 15007", "IS 17855", "IS 12694"]
+    signals: [capacity, cycles, safety, marking]
+
+  - id: pressure_cooker
+    display: Pressure cooker / kitchen appliances
+    terms_en: [pressure cooker, gas stove, lpg stove, kitchen appliance]
+    terms_hi: [pressure cooker, cooker, gas chulha]
+    terms_hinglish: [cooker whistle, inner lid, outer lid, top only]
+    is_hints: ["IS 1527", "IS 2347", "IS 4248", "IS 3065"]
+    signals: [working pressure, safety valve, burst test]
+
+  - id: lpg_equipment
+    display: LPG hoses & appliances
+    terms_en: [lpg hose, gas hose, regulator, cylinder connector]
+    terms_hi: [gas pipe, regulator, cylinder]
+    terms_hinglish: [lpg pipe, gas connection, rubber hose]
+    is_hints: ["IS 965", "IS 14164", "IS 4503", "IS 11116"]
+    signals: [leak test, burst pressure, crimp, marking]
+
+  - id: boiler
+    display: Boilers & pressure vessels
+    terms_en: [boiler, steam boiler, pressure vessel, unfired]
+    terms_hi: [bhaap boiler, dabba]
+    terms_hinglish: [steam boiler, boiler plate, IBR]
+    is_hints: ["IS 2825", "IS 12008", "IS 8568", "IS 7644"]
+    signals: [IBR, weld inspection, hydrostatic test, safety valve]
+
+  - id: water_tank
+    display: Water storage tanks / pipes
+    terms_en: [water tank, storage tank, water pipe, plumbing pipe, cpvc, upvc]
+    terms_hi: [paani ki tanki, tank, pipeline]
+    terms_hinglish: [overhead tank, sump tank, swr pipe, drainage pipe]
+    is_hints: ["IS 15778", "IS 4985", "IS 13595", "IS 14735", "IS 10116"]
+    signals: [capacity, food grade, leakage, fitting]
+
+  - id: earthing
+    display: Earthing & lightning protection
+    terms_en: [earthing, ground rod, lightning arrester, earth electrode]
+    terms_hi: [earthing, prithvi connection, bijli suraksha]
+    terms_hinglish: [earthing pit, copper plate, GI plate, la]
+    is_hints: ["IS 3043", "IS 13092", "IS 14164", "IS 2309"]
+    signals: [earth resistance, electrode, bonding]
+
+  - id: structural_steel
+    display: Structural steel
+    terms_en: [structural steel, steel plate, angle, channel, beam, mt]
+    terms_hi: [loha girder, steel beam, sarya]
+    terms_hinglish: [angle, channel, joist, plate girder, fe410]
+    is_hints: ["IS 2062", "IS 226", "IS 2002", "IS 808", "IS 663"]
+    signals: [yield stress, elongation, chemical composition, weldability]
+
+  - id: paint_coating
+    display: Paints & coatings
+    terms_en: [paint, primer, enamel, distemper, coating, varnish]
+    terms_hi: [rang, paint, primer]
+    terms_hinglish: [distemper, emulsion paint, putty, powder coating]
+    is_hints: ["IS 15489", "IS 101", "IS 13213", "IS 15487", "IS 6433"]
+    signals: [drying time, coverage, VOC, adhesion]
+
+  - id: plywood_board
+    display: Plywood / blockboard / panels
+    terms_en: [plywood, blockboard, flush door, particle board, laminates]
+    terms_hi: [plywood, sarakki]
+    terms_hinglish: [marine ply, commercial ply, waterproof ply, mdf]
+    is_hints: ["IS 303", "IS 710", "IS 12406", "IS 1659", "IS 2185"]
+    signals: [grade, formaldehyde emission, moisture, bonding]
+
+  - id: welding
+    display: Welding consumables & procedures
+    terms_en: [welding electrode, welding rod, weld procedure, mig wire, gtaw]
+    terms_hi: [welding rod, dhaaga, jodai]
+    terms_hinglish: [electrode, welding machine, tack weld, root pass]
+    is_hints: ["IS 815", "IS 1395", "IS 1848", "IS 7517", "IS 9417"]
+    signals: [tensile strength, hydrogen, positional welding, consumable]
+
+  - id: hand_tools
+    display: Hand tools
+    terms_en: [spanner, wrench, pliers, screwdriver, hammer, allen key]
+    terms_hi: [pana, pana set, plier, screwdriver]
+    terms_hinglish: [ring spanner, combination plier, cutters, ratchet]
+    is_hints: ["IS 2367", "IS 6149", "IS 6109", "IS 4442", "IS 8840"]
+    signals: [chrome vanadium, hardness, torque, dimensions]
+
+  - id: pump
+    display: Pumps
+    terms_en: [pump, water pump, submersible pump, centrifugal pump]
+    terms_hi: [pump, mota pani pump, borewell pump]
+    terms_hinglish: [borewell pump, 1 hp pump, monoblock pump]
+    is_hints: ["IS 6595", "IS 9136", "IS 16617", "IS 8472"]
+    signals: [head, discharge, efficiency, power rating]
+
+  - id: bms_apparel
+    display: Baby / children garments & toys (QCO-heavy)
+    terms_en: [children clothing, baby garment, toy, plush toy, diaper]
+    terms_hi: [bachche ke kapde, khilona]
+    terms_hinglish: [kids wear, infant wear, soft toy]
+    is_hints: ["IS 9873", "IS 1507", "IS 1476", "IS 17396"]
+    signals: [flammability, azo colourants, small parts, labeling]
+
+# Safety-net: terms that must trigger the mandatory-certification check even
+# if concept resolution is weak (these categories are all QCO-covered).
+qco_trigger_terms:
+  - led
+  - bulb
+  - charger
+  - cable
+  - wire
+  - battery
+  - toy
+  - helmet
+  - cement
+  - pressure cooker
+  - lpg
+  - transformer
+  - solar
+  - fan
+  - bicycle helmet
+  - electric kettle
+  - rice cooker
+  - water purifier
+  - electromagnetic compatibility
