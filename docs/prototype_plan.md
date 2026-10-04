@@ -68,6 +68,23 @@ Scope (what's in / what's out), the week-by-week build schedule with owners, how
 
 **→ Next: Week 2 — BGE-M3 + BM25 indexer → Qdrant; hybrid retrieval endpoint.**
 
+### Night-sprint status — E2E PROTOTYPE LIVE (2026-10-04 evening, ~5h sprint)
+
+Collapsed Weeks 2–6 into one working demo (idea-submission deadline 5 Oct):
+
+| Task | Status |
+|---|---|
+| Qdrant index: 17,135 dense (BGE-M3) + sparse (BM25), RRF fusion | ✅ `pipeline/index_qdrant.py`, `points_count=17135` |
+| `POST /api/v1/search` hybrid + cross-encoder rerank | ✅ `services/api/app/retrieval.py` |
+| `POST /api/v1/ask` full pipeline: decompose → retrieve → rerank → graph → version guard → certification → guardrail → clause | ✅ `services/api/app/routers/ask.py` + `stages/`, `db/`, `llm/` |
+| LLM: Gemini JSON-mode chain `gemini-3.7-flash → 3.5 → 3.6` (2.5-flash retired for new keys, 3.8-flash overloaded) + heuristic fallback | ✅ `app/llm/client.py` — demo never blocks on LLM |
+| Role badges from `aspect`; Version Guard with **inverted** supersession semantics (row names predecessors); QCO oracle from snapshot | ✅ verified: IS 1786 current, IS 1139 → withdrawn → IS 1786 |
+| Next.js UI (`apps/web`): input + samples, understood card, badges, allied grid, clause copy, `app/api/ask` proxy | ✅ `npm run dev` :3000, added to compose as `web` |
+| 3 demo queries green (sariya/IS 1786 family, cement/IS 269, plywood/IS 10701 + QCO notified) | ✅ conf 0.95, live + cached |
+| 7.3 GB RAM box: BGE-M3 fp16 (~1.2 GB), MiniLM reranker (~90 MB), container `api` stopped, host :8001 is the runtime | ✅ 1.25 GB RSS; `RERANK_MODEL` override in `.env` |
+
+**Demo runbook:** `docker compose up -d postgres qdrant neo4j` → host API `python -m uvicorn app.main:app --port 8001` (from `services/api`, needs `.env`) → `npm run dev` (`apps/web`). Pre-run the 3 sample queries once (warms models + response cache), then demo clicks are instant. Known limits: first query ~30–60 s cold; `eval/` benchmark, Tender Linter, voice input still pending.
+
 | Week | Dates (approx.) | Milestone | Demo moment it unlocks | Owner(s) |
 |---|---|---|---|---|
 | **0** | Oct 3–5 | **Infra day:** install Docker Desktop + WSL2, create Python 3.12 venv, scaffold repo (compose file, folder structure), smoke-test crawling 1 BIS list page, create Gemini + Groq keys | "The pipe works — 1 page crawled, containers up" | Backend + Data |
