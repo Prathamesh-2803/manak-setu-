@@ -277,6 +277,20 @@ body {
 .finding .fdetail { font-size: 13.5px; color: var(--muted); margin-top: 7px; line-height: 1.55; }
 .finding .fsugg { font-size: 13.5px; color: var(--ink); margin-top: 7px; font-weight: 600; }
 
+.mapper {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  background: var(--glass); border: 1px dashed rgba(79, 216, 196, 0.4);
+  border-radius: 14px; padding: 12px 16px; margin-top: 12px;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.mapper .mlabel { font-size: 12.5px; font-weight: 800; letter-spacing: 0.06em; color: var(--teal); text-transform: uppercase; }
+.mapper input {
+  flex: 1; min-width: 180px; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--line);
+  border-radius: 10px; padding: 9px 13px; color: var(--ink); font-size: 13.5px; font-family: inherit;
+}
+.mapper input:focus { outline: none; border-color: rgba(79, 216, 196, 0.6); }
+.mapres { margin-top: 12px; display: grid; gap: 10px; }
+
 @media (max-width: 760px) {
   .grid { grid-template-columns: 1fr; }
   .hero-pick { grid-template-columns: 1fr; text-align: center; justify-items: center; }

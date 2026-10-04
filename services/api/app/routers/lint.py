@@ -13,7 +13,7 @@ import logging
 import re
 import time
 
-from fastapi import APIRouter
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from app.db import pg as db
@@ -57,12 +57,16 @@ def _verdict(score: int) -> str:
 
 @router.post("/lint", response_model=LintResponse)
 def lint(req: LintRequest) -> LintResponse:
+    return _lint_text(req.text)
+
+
+def _lint_text(text: str) -> LintResponse:
     t0 = time.perf_counter()
     findings: list[Finding] = []
     score = 100
 
     # 1. Outdated IS references mentioned in the text.
-    mentioned = [f"IS {m.group(1)}" for m in _IS_RE.finditer(req.text)]
+    mentioned = [f"IS {m.group(1)}" for m in _IS_RE.finditer(text)]
     mentioned = list(dict.fromkeys(mentioned))[:20]
     rows = db.fetch_by_designations(mentioned)
     for des in mentioned:
@@ -82,7 +86,7 @@ def lint(req: LintRequest) -> LintResponse:
             ))
 
     # 2. Foreign specs (GFR 2017 Rule 144(iii) flag).
-    foreign = list(dict.fromkeys(m.group(0).strip() for m in _FOREIGN_RE.finditer(req.text)))[:10]
+    foreign = list(dict.fromkeys(m.group(0).strip() for m in _FOREIGN_RE.finditer(text)))[:10]
     for f in foreign:
         score -= 15
         findings.append(Finding(
@@ -95,7 +99,7 @@ def lint(req: LintRequest) -> LintResponse:
 
     # 3. Missing allied standards: ask-pipeline top picks not mentioned.
     try:
-        recs = _run(AskRequest(query=req.text[:2000], limit=6, expand=0))
+        recs = _run(AskRequest(query=text[:2000], limit=6, expand=0))
         mentioned_cores = {guardrail.core(d) for d in mentioned}
         added = 0
         for c in recs["results"]:
@@ -126,3 +130,30 @@ def lint(req: LintRequest) -> LintResponse:
         score=score, verdict=_verdict(score), findings=findings,
         checked_is=mentioned, took_ms=int((time.perf_counter() - t0) * 1000),
     )
+
+
+def _extract_text(filename: str, data: bytes) -> str:
+    name = (filename or "").lower()
+    if name.endswith(".pdf"):
+        from pypdf import PdfReader
+        import io
+        reader = PdfReader(io.BytesIO(data))
+        return "\n".join((p.extract_text() or "") for p in reader.pages)[:12000]
+    if name.endswith(".docx"):
+        import io
+        import docx
+        doc = docx.Document(io.BytesIO(data))
+        return "\n".join(p.text for p in doc.paragraphs)[:12000]
+    # .txt and anything else: best-effort decode
+    return data.decode("utf-8", errors="ignore")[:12000]
+
+
+@router.post("/lint-file", response_model=LintResponse)
+async def lint_file(file: UploadFile = File(...)) -> LintResponse:
+    data = await file.read()
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(413, "File too large (max 5 MB).")
+    text = _extract_text(file.filename or "", data).strip()
+    if len(text) < 10:
+        raise HTTPException(422, "No readable text found in the file.")
+    return _lint_text(text)

@@ -8,3 +8,7 @@ psycopg[binary]>=3.2
 qdrant-client>=1.15
 sentence-transformers>=3.4
 py-rust-stemmers>=0.1
+python-multipart>=0.0.18
+multipart>=1.0  # required by starlette 1.x form parsing
+pypdf>=4.0
+python-docx>=1.1
