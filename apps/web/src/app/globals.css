@@ -258,8 +258,7 @@ body {
 }
 .tab:hover { color: var(--ink); border-color: rgba(255, 255, 255, 0.3); }
 .tab.on { color: #22130a; background: linear-gradient(135deg, #ffc46b, var(--saffron)); border-color: transparent; box-shadow: 0 8px 24px rgba(255, 153, 51, 0.3); }
-.newtag { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; background: #0a1122; color: var(--gold); border-radius: 6px; padding: 2px 7px; }
-.tab.on .newtag { background: rgba(0, 0, 0, 0.25); color: #22130a; }
+.famnote { font-size: 13px; color: var(--muted); margin: 2px 0 0; }
 
 .finding {
   border-radius: var(--radius); padding: 16px 20px; margin-top: 12px;

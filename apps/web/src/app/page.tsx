@@ -361,13 +361,12 @@ export default function Home() {
           <div className="stat"><b className="saff">{(stats?.standards ?? 17135).toLocaleString("en-IN")}</b><span>standards indexed · live</span></div>
           <div className="stat"><b className="grn">{(stats?.qco_tracked ?? 526).toLocaleString("en-IN")}</b><span>QCO tracked · live</span></div>
           <div className="stat"><b className="blu">{(stats?.graph_edges ?? 84274).toLocaleString("en-IN")}</b><span>graph links · live</span></div>
-          <div className="stat"><b className="gld">0</b><span>fake IS numbers</span></div>
         </div>
       </section>
 
       <div className="tabs" role="tablist" aria-label="Mode">
         <button role="tab" aria-selected={mode === "find"} className={`tab${mode === "find" ? " on" : ""}`} onClick={() => setMode("find")}>Find standards</button>
-        <button role="tab" aria-selected={mode === "audit"} className={`tab${mode === "audit" ? " on" : ""}`} onClick={() => setMode("audit")}>Audit a tender <span className="newtag">NEW</span></button>
+        <button role="tab" aria-selected={mode === "audit"} className={`tab${mode === "audit" ? " on" : ""}`} onClick={() => setMode("audit")}>Audit a tender</button>
       </div>
 
       {mode === "find" && (
@@ -483,15 +482,17 @@ export default function Home() {
 
           {top && (
             <>
-              <div className="sect"><h3>Top recommendation</h3><div className="rule" /><span className="count">rank 1 of {out.results.length}</span></div>
+              <div className="sect"><h3>Recommended family</h3><div className="rule" /><span className="count">main spec + {out.results.length - 1} relatives</span></div>
+              <div className="famnote">One purchase needs a family of rulebooks — the main specification first, test methods, codes and sampling below. Every number verified in the live database.</div>
               <div className="hero-pick">
                 <Ring v={out.confidence} />
                 <div>
-                  <span className="crown">Best match · ISI track</span>
+                  <span className="crown">Main specification</span>
                   <div className="des">{top.designation}{top.year ? `:${top.year}` : ""}</div>
                   <div className="title">{top.title}</div>
                   <Badges c={top} />
                   {top.certification.ministry && <div className="meta">Ministry: {top.certification.ministry}</div>}
+                  {top.certification.mandatory && top.certification.source && <div className="meta">Source: {top.certification.source}</div>}
                   {top.iso_equivalent && <div className="meta">ISO/IEC equivalent: {top.iso_equivalent}</div>}
                 </div>
               </div>
