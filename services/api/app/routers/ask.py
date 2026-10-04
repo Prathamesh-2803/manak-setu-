@@ -158,6 +158,13 @@ def _run(req: AskRequest) -> dict:
         scores = [0.0] * len(cand)
     for c, s in zip(cand, scores):
         c["rerank_score"] = s
+    # Small prior for domain-glossary product hints (e.g. sariya -> IS 1786):
+    # they encode curator knowledge the generic reranker lacks.
+    hint_set = set(dec.get("is_hints", []) or [])
+    if hint_set:
+        for c in cand:
+            if c.get("designation") in hint_set and c["rerank_score"] is not None:
+                c["rerank_score"] += 0.05
     # Pure score order: glossary hints only guarantee recall, ranking decides.
     cand.sort(key=lambda c: -(c["rerank_score"] if c["rerank_score"] is not None else -1e9))
     ordered = cand + [c for c in pool[_RERANK_POOL:] if c not in cand]

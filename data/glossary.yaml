@@ -150,7 +150,7 @@ concepts:
     terms_en: [plywood, blockboard, flush door, particle board, laminates]
     terms_hi: [plywood, sarakki]
     terms_hinglish: [marine ply, commercial ply, waterproof ply, mdf]
-    is_hints: ["IS 303", "IS 710", "IS 12406", "IS 1659", "IS 2185"]
+    is_hints: ["IS 303", "IS 710", "IS 12406", "IS 1659", "IS 2185", "IS 10701"]
     signals: [grade, formaldehyde emission, moisture, bonding]
 
   - id: welding
