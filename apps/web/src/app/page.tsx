@@ -42,6 +42,20 @@ type AskOut = {
   cached?: boolean;
   stages_ms: Record<string, number>;
 };
+type LintFinding = {
+  kind: string;
+  severity: string;
+  title: string;
+  detail: string;
+  suggestion: string | null;
+};
+type LintOut = {
+  score: number;
+  verdict: string;
+  findings: LintFinding[];
+  checked_is: string[];
+  took_ms: number;
+};
 
 /* ---------------- static content ---------------- */
 const SAMPLES = [
@@ -49,6 +63,7 @@ const SAMPLES = [
   "53 grade ordinary portland cement for RCC work",
   "Structural plywood for school furniture, compulsory certification",
 ];
+const SAMPLE_TENDER = `Supply of 500 tonnes of 12mm steel reinforcement bars for building construction. The goods shall conform to IS 1139:1966 and shall be ISI marked. All site electrical panels shall comply with IEC 60335. Delivery within 60 days.`;
 const STAGES = [
   { id: "detect", label: "Bhasha", sub: "language", msKey: null as string | null },
   { id: "decompose", label: "Decomposer", sub: "AI extract", msKey: "decompose" },
@@ -151,6 +166,11 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [listening, setListening] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [mode, setMode] = useState<"find" | "audit">("find");
+  const [tender, setTender] = useState(SAMPLE_TENDER);
+  const [lintOut, setLintOut] = useState<LintOut | null>(null);
+  const [lintLoading, setLintLoading] = useState(false);
+  const [lintErr, setLintErr] = useState("");
   const recRef = useRef<{ stop: () => void } | null>(null);
   const t0Ref = useRef(0);
 
@@ -201,6 +221,24 @@ export default function Home() {
     );
   }
 
+  async function runLint(text: string) {
+    if (text.trim().length < 10 || lintLoading) return;
+    setLintLoading(true); setLintErr(""); setLintOut(null);
+    try {
+      const r = await fetch("/api/lint", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || `request failed (${r.status})`);
+      setLintOut(data);
+    } catch (e) {
+      setLintErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLintLoading(false);
+    }
+  }
+
   const activeStage = Math.min(STAGES.length - 1, Math.floor(elapsed / 6));
   const top = out?.results?.[0];
 
@@ -232,6 +270,12 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="tabs" role="tablist" aria-label="Mode">
+        <button role="tab" aria-selected={mode === "find"} className={`tab${mode === "find" ? " on" : ""}`} onClick={() => setMode("find")}>Find standards</button>
+        <button role="tab" aria-selected={mode === "audit"} className={`tab${mode === "audit" ? " on" : ""}`} onClick={() => setMode("audit")}>Audit a tender <span className="newtag">NEW</span></button>
+      </div>
+
+      {mode === "find" && (
       <section className="console">
         <div className="cbox">
           <textarea value={q} onChange={(e) => setQ(e.target.value)}
@@ -248,8 +292,27 @@ export default function Home() {
         </div>
         {err && <div className="err">{err}</div>}
       </section>
+      )}
 
-      {(loading || out) && (
+      {mode === "audit" && (
+      <section className="console">
+        <div className="cbox" style={{ flexDirection: "column" }}>
+          <textarea value={tender} onChange={(e) => setTender(e.target.value)} rows={5}
+            placeholder="Paste a draft tender clause here…" aria-label="Draft tender text" style={{ minHeight: 110 }} />
+          <button className="cta" disabled={lintLoading} onClick={() => runLint(tender)} style={{ minHeight: 54 }}>
+            {lintLoading ? "Auditing…" : <>Audit tender {I.go}</>}
+          </button>
+        </div>
+        <div className="chips">
+          <button className="chip" onClick={() => { setTender(SAMPLE_TENDER); runLint(SAMPLE_TENDER); }}>
+            Try the sample: outdated IS + foreign spec + gaps
+          </button>
+        </div>
+        {lintErr && <div className="err">{lintErr}</div>}
+      </section>
+      )}
+
+      {mode === "find" && (loading || out) && (
         <div className="pipe" role="status" aria-label="AI pipeline progress">
           {STAGES.map((s, i) => {
             const done = !!out;
@@ -266,14 +329,14 @@ export default function Home() {
         </div>
       )}
 
-      {loading && !out && (
+      {mode === "find" && loading && !out && (
         <div className="spin">AI pipeline running — decomposer → hybrid search → reranker → knowledge graph → guard → oracle…<br />
           <span style={{ fontSize: 12.5 }}>first query warms the models ({Math.round(elapsed)}s)</span>
           <div className="bar"><div /></div>
         </div>
       )}
 
-      {out && (
+      {mode === "find" && out && (
         <>
           <div className="uread">
             <span className="ai">{I.spark} AI interpretation · {out.language} · via {out.decomposer}</span>
@@ -330,6 +393,35 @@ export default function Home() {
               <button className="copy" onClick={copyClause}>{copied ? <>{I.check} Copied!</> : <>{I.copy} Copy clause</>}</button>
             </div>
           )}
+        </>
+      )}
+
+      {mode === "audit" && lintLoading && !lintOut && (
+        <div className="spin">Auditing — checking versions → scanning foreign specs → finding gaps…<div className="bar"><div /></div></div>
+      )}
+
+      {mode === "audit" && lintOut && (
+        <>
+          <div className="sect"><h3>Tender health report</h3><div className="rule" /><span className="count">{lintOut.took_ms} ms · {lintOut.checked_is.length} IS refs checked</span></div>
+          <div className="hero-pick">
+            <Ring v={lintOut.score / 100} />
+            <div>
+              <span className="crown">Health score · {lintOut.score}/100</span>
+              <div className="title" style={{ fontSize: 17 }}>{lintOut.verdict}</div>
+              <div className="meta">Outdated refs −25 · foreign specs −15 · missing allied −10 each</div>
+            </div>
+          </div>
+          {lintOut.findings.map((f, i) => (
+            <div className={`finding sev-${f.severity}`} key={i} style={{ animationDelay: `${Math.min(i * 70, 420)}ms` }}>
+              <div className="fhead">
+                {f.severity === "high" ? I.warn : f.kind === "ok" ? I.check : I.spark}
+                <b>{f.title}</b>
+                <span className="src">{f.kind}</span>
+              </div>
+              <div className="fdetail">{f.detail}</div>
+              {f.suggestion && <div className="fsugg">→ {f.suggestion}</div>}
+            </div>
+          ))}
         </>
       )}
 
