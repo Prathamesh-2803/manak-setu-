@@ -45,7 +45,9 @@ services:
       - neo4j_data:/data
 
   api:
-    build: ./services/api
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
     ports:
       - "8000:8000"
     env_file:
@@ -57,6 +59,7 @@ services:
     volumes:
       - ./services/api:/app        # dev: code changes reflect without rebuild
       - ./data:/app/data           # crawler output visible inside container
+      - hf_cache:/root/.cache/huggingface  # keep downloaded models across rebuilds
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       postgres:
@@ -64,14 +67,19 @@ services:
       qdrant:
         condition: service_healthy
 
-  # web:                      # <-- enabled in Week 5 (frontend)
-  #   build: ./apps/web
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - api
+  web:
+    build: ./apps/web
+    ports:
+      - "3000:3000"
+    environment:
+      API_URL: http://api:8000
+    volumes:
+      - ./apps/web/src:/app/src   # dev: UI edits reflect without rebuild
+    depends_on:
+      - api
 
 volumes:
   pgdata:
   qdrant_data:
   neo4j_data:
+  hf_cache:          # huggingface model cache (BGE-M3 + reranker, ~5 GB)

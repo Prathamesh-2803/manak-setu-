@@ -41,8 +41,21 @@ def get_client() -> QdrantClient:
     global _client
     with _lock:
         if _client is None:
-            _client = QdrantClient(url=_settings.qdrant_url)
+            _client = QdrantClient(
+                url=_settings.qdrant_url, timeout=60, check_compatibility=False
+            )
         return _client
+
+
+def _reset_client() -> None:
+    global _client
+    with _lock:
+        if _client is not None:
+            try:
+                _client.close()
+            except Exception:
+                pass
+            _client = None
 
 
 def load_meta() -> dict:
@@ -59,7 +72,16 @@ def _get_embedder():
         if _embedder is None:
             from sentence_transformers import SentenceTransformer
 
-            _embedder = SentenceTransformer(_settings.embedding_model)
+            # fp16 halves RAM (~2.3 GB -> ~1.2 GB); negligible recall impact.
+            try:
+                import torch
+
+                _embedder = SentenceTransformer(
+                    _settings.embedding_model,
+                    model_kwargs={"torch_dtype": torch.float16},
+                )
+            except Exception:
+                _embedder = SentenceTransformer(_settings.embedding_model)
         return _embedder
 
 
@@ -73,20 +95,38 @@ def _get_reranker():
         return _reranker
 
 
+def rerank(query: str, texts: list[str]) -> list[float]:
+    """Score (query, text) pairs with the cross-encoder. Used to order pools."""
+    if not texts:
+        return []
+    scores = _get_reranker().predict([(query, t) for t in texts])
+    return [float(s) for s in scores]
+
+
+def _query(collection: str, prefetch: list, fusion_limit: int):
+    return get_client().query_points(
+        collection_name=collection,
+        prefetch=prefetch,
+        query=models.FusionQuery(fusion=models.Fusion.RRF),
+        limit=fusion_limit,
+        with_payload=True,
+    )
+
+
 def search(query: str, limit: int = 10, rerank: bool = True) -> dict:
     t0 = time.perf_counter()
     meta = load_meta()
-    client = get_client()
     collection = meta["collection"]
 
     prefetch: list[models.Prefetch] = []
+    k = _settings.rerank_top_k if rerank else limit
     sp_indices, sp_values = bm25_query_weights(query, meta["terms"], meta["idf"])
     if sp_indices:
         prefetch.append(
             models.Prefetch(
                 query=models.SparseVector(indices=sp_indices, values=sp_values),
                 using="sparse",
-                limit=_settings.rerank_top_k,
+                limit=k,
             )
         )
 
@@ -95,16 +135,14 @@ def search(query: str, limit: int = 10, rerank: bool = True) -> dict:
         .encode([query], normalize_embeddings=True, convert_to_numpy=True)[0]
         .tolist()
     )
-    prefetch.append(models.Prefetch(query=dense, using="dense", limit=_settings.rerank_top_k))
+    prefetch.append(models.Prefetch(query=dense, using="dense", limit=k))
 
     fusion_limit = _settings.rerank_top_k if rerank else limit
-    response = client.query_points(
-        collection_name=collection,
-        prefetch=prefetch,
-        query=models.FusionQuery(fusion=models.Fusion.RRF),
-        limit=fusion_limit,
-        with_payload=True,
-    )
+    try:
+        response = _query(collection, prefetch, fusion_limit)
+    except Exception:
+        _reset_client()  # stale pooled connection (Docker NAT flake) -> retry once
+        response = _query(collection, prefetch, fusion_limit)
     hits = response.points
 
     results = []
