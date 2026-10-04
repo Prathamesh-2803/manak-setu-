@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     crawl_delay_seconds: float = 1.5
     log_level: str = "INFO"
 
+    # Retrieval
+    qdrant_collection: str = "standards"
+    embedding_model: str = "BAAI/bge-m3"
+    rerank_model: str = "BAAI/bge-reranker-v2-m3"
+    index_meta_path: str = "data/index_meta.json"
+    rerank_top_k: int = 40
+
 
 @lru_cache
 def get_settings() -> Settings:

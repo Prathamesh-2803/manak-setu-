@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.config import get_settings
-from app.routers import health
+from app.routers import health, search
 
 settings = get_settings()
 
@@ -12,6 +12,7 @@ app = FastAPI(
 )
 
 app.include_router(health.router, tags=["health"])
+app.include_router(search.router)
 
 
 @app.get("/")

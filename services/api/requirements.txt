@@ -4,3 +4,7 @@ pydantic-settings>=2.6
 httpx>=0.27
 beautifulsoup4>=4.12
 PyYAML>=6.0
+psycopg[binary]>=3.2
+qdrant-client>=1.15
+sentence-transformers>=3.4
+py-rust-stemmers>=0.1

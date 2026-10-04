@@ -50,6 +50,24 @@ Scope (what's in / what's out), the week-by-week build schedule with owners, how
 
 **→ Next: Week 1 — full BIS crawl (~23k standards) → Postgres, graph loader → Neo4j, QCO snapshot + glossary.**
 
+### Week 1 status — COMPLETE (2026-10-04)
+
+| Task | Status |
+|---|---|
+| BIS crawl: 37 groups → 17,135 unique standards (list pages) | ✅ `pipeline/crawl_bis.py` → `data/raw/standards_list.jsonl` |
+| Detail crawl: 17,135 / 17,135, **0 errors** | ✅ `data/raw/details/*.json` (aspects, cross-refs, supersession, ITC-HS, intl equivalents) |
+| Postgres load | ✅ `standards` = 17,135 (GIN tsvector + indexes) + `cross_refs` = 126,341 via `pipeline/load_postgres.py` |
+| Neo4j graph load | ✅ 19,187 nodes (17,135 + 2,052 supersession placeholders), 84,274 `REFERS_TO`, 2,185 `SUPERSEDED_BY` edges, 0 unmatched via `pipeline/load_graph.py` |
+| QCO snapshot | ✅ `data/qco_snapshot.yaml` — 526 mandatory-cert standards (447 QCO-implemented with date, 79 notified) via `pipeline/build_qco.py` |
+| Glossary | ✅ `data/glossary.yaml` — 22 concepts (EN/HI/Hinglish terms → IS hints) + 19 QCO trigger terms |
+| Supersession semantics | ✅ Verified from data: "Superseding IS" = the **old** standard this one replaces (1,448 vs 120 samples); old standards not in classification lists get placeholder nodes |
+
+**Known gaps (feed into Week 2/3):**
+- Standards published after Oct 2025 live on the new portal `standards.bis.gov.in` (Angular SPA, API not yet found — `pipeline/probe_new_portal.py` pending). Our docs' flagship example **IS 9637:1980 → 2024 is real but not in the 17,135** — it's on the new portal.
+- Coverage 17,135 vs ~23k claimed in-force + withdrawn: remainder = new-portal records + withdrawn/withdrawn-and-archived not listed in group pages.
+
+**→ Next: Week 2 — BGE-M3 + BM25 indexer → Qdrant; hybrid retrieval endpoint.**
+
 | Week | Dates (approx.) | Milestone | Demo moment it unlocks | Owner(s) |
 |---|---|---|---|---|
 | **0** | Oct 3–5 | **Infra day:** install Docker Desktop + WSL2, create Python 3.12 venv, scaffold repo (compose file, folder structure), smoke-test crawling 1 BIS list page, create Gemini + Groq keys | "The pipe works — 1 page crawled, containers up" | Backend + Data |
