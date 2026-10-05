@@ -1,3 +1,8 @@
+---
+title: Manak Setu API
+sdk: docker
+app_port: 8000
+---
 # Manak Setu (मानक सेतु) — Standards Bridge
 
 **AI-Powered Recommendation Engine for Identifying Applicable Indian Standards for Procurement Specifications**

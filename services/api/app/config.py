@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     confidence_threshold: float = 0.65
     crawl_delay_seconds: float = 1.5
     log_level: str = "INFO"
+    # Comma-separated CORS origins. "*" for cloud preview; set explicitly in prod.
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     # Retrieval
     qdrant_collection: str = "standards"
